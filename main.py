@@ -2,6 +2,17 @@ import os
 from os import walk
 from collections import defaultdict
 import re
+import nltk
+import time
+
+
+def find__hole__word__nltk(word, text):
+    words = nltk.word_tokenize(text)
+    # for item in words:
+    #     if item == word:
+    #         return 1
+    # return 0
+    return words.count(word)
 
 
 def find__hole__word(w):
@@ -48,6 +59,7 @@ word1 = 'standford'
 word2 = 'class'
 dictionary = {}
 dictionaryList = defaultdict(list)
+start_time = time.time()
 for dirpath, dirnames, filenames in walk(root):
     for file in filenames:
         dictionary[dirpath + "/" + file] = i
@@ -55,10 +67,15 @@ for dirpath, dirnames, filenames in walk(root):
         try:
             with open(dirpath + "/" + file, 'r') as f:
                 fileContent = f.read()
+                find__hole__word__nltk(word1, fileContent)
                 if find__hole__word(word1)(fileContent) is not None:
                     dictionaryList[word1].append(i)
                 if find__hole__word(word2)(fileContent) is not None:
                     dictionaryList[word2].append(i)
+                # if find__hole__word__nltk(word1, fileContent) != 0:
+                #     dictionaryList[word1].append(i)
+                # if find__hole__word__nltk(word2, fileContent) != 0:
+                #     dictionaryList[word2].append(i)
         except IOError as e:
             print(e)
 
@@ -68,3 +85,4 @@ for dirpath, dirnames, filenames in walk(root):
 # print(len(list1))
 # print(len(list2))
 merge__dictionary(dictionaryList)
+print(time.time() - start_time)
