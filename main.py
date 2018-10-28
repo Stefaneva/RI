@@ -4,14 +4,11 @@ from collections import defaultdict
 import re
 import nltk
 import time
+import heapq
 
 
 def find__hole__word__nltk(word, text):
     words = nltk.word_tokenize(text)
-    # for item in words:
-    #     if item == word:
-    #         return 1
-    # return 0
     return words.count(word)
 
 
@@ -29,13 +26,13 @@ def merge__dictionary(dict):
     #     print(k)
 
     # mergedlist = []
-    sorted_dictionary = sorted(dict, key=lambda k: len(dict[k]))
+    # sorted_dictionary = sorted(dict, key=lambda k: len(dict[k]))
     i, j = 0, 0
     k = 0
     while i < len(dict[word1]) and j < len(dict[word2]):
         if dict[word1][i] == dict[word2][j]:
             filePath = list(dictionary.keys())[list(dictionary.values()).index(dict[word1][i])]
-            directory = filePath[(filePath.rindex("/")-1)::]
+            directory = filePath[(filePath.rindex("/") - 1)::]
             print(directory)
             k = k + 1
             # mergedlist.append(dict[word1][i])
@@ -49,14 +46,52 @@ def merge__dictionary(dict):
     # print(k)
 
 
+def sort__posting__list(dict):
+    sorted_dictionary = sorted(dict, key=lambda k: len(dict[k]))
+    print(sorted_dictionary)
+    with open("test.out", "a+") as f:
+        for word in sorted_dictionary:
+            for item in dict[word]:
+                f.write("%s " % item)
+            f.write("\n")
+
+
+def merge__posting__lists__from__disk():
+    merged_final = list()
+    for file in os.listdir(os.getcwd()):
+        if file.endswith(".out"):
+            with open(file, 'r+') as f:
+                first_line = [int(x) for x in f.readline().split()]
+                second_line = [int(x) for x in f.readline().split()]
+                merged_list = list(heapq.merge(first_line, second_line, key=lambda a: a == a))
+                if not merged_final:
+                    merged_final = merged_list
+                else:
+                    merged_final = list(heapq.merge(merged_final, merged_list, key=lambda a: a == a))
+    print(merged_final)
+
+
+def write__postings__list__to__disk(dict):
+    if filenum == -1:
+        return defaultdict(list)
+    sorted_dictionary = sorted(dict, key=lambda k: len(dict[k]))
+    s = str(filenum) + ".out"
+    with open(s, "w+") as f:
+        for word in sorted_dictionary:
+            for item in dict[word]:
+                f.write("%s " % item)
+            f.write("\n")
+    return defaultdict(list)
+
+
 # os.chdir('D:/Facultate/Master/Regasirea Informatiei/Lab1/real_data/')
-os.chdir('C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/real_data/0/')
+os.chdir('C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/')
 # root = 'D:/Facultate/Master/Regasirea Informatiei/Lab1/real_data/'
 root = 'C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/real_data/'
 i = 0
-j = 0
-word1 = 'standford'
-word2 = 'class'
+filenum = -1
+word1 = 'are'
+word2 = 'we'
 dictionary = {}
 dictionaryList = defaultdict(list)
 start_time = time.time()
@@ -67,22 +102,27 @@ for dirpath, dirnames, filenames in walk(root):
         try:
             with open(dirpath + "/" + file, 'r') as f:
                 fileContent = f.read()
-                find__hole__word__nltk(word1, fileContent)
                 if find__hole__word(word1)(fileContent) is not None:
                     dictionaryList[word1].append(i)
                 if find__hole__word(word2)(fileContent) is not None:
                     dictionaryList[word2].append(i)
-                # if find__hole__word__nltk(word1, fileContent) != 0:
-                #     dictionaryList[word1].append(i)
-                # if find__hole__word__nltk(word2, fileContent) != 0:
-                #     dictionaryList[word2].append(i)
+                    # if find__hole__word__nltk(word1, fileContent) != 0:
+                    #     dictionaryList[word1].append(i)
+                    #  if find__hole__word__nltk(word2, fileContent) != 0:
+                    #     dictionaryList[word2].append(i)
         except IOError as e:
             print(e)
+    dictionaryList = write__postings__list__to__disk(dictionaryList)
+    filenum = filenum + 1
 
 # print__dictionary__list(dictionaryList)
 # list1 = dictionaryList.get(word1)
 # list2 = dictionaryList[word2]
 # print(len(list1))
 # print(len(list2))
-merge__dictionary(dictionaryList)
+# merge__dictionary(dictionaryList)
+
+# sort__posting__list(dictionaryList)
+
+merge__posting__lists__from__disk()
 print(time.time() - start_time)
