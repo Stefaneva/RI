@@ -40,6 +40,12 @@ def construct_header_tf(header_word):
         if key == header_word:
             tfh[key] = tfh[key] + 1
 
+def convert_dictionary_to_list(dictionary):
+    new_list = []
+    for key in dictionary:
+        new_list.append(dictionary[key])
+    return new_list
+
 
 def construct_body_tf(body_element):
     body_tf.append(len(body_element.split(' ')) - 1)
@@ -48,19 +54,46 @@ def construct_body_tf(body_element):
 def construct_tf_array(tf_list):
     title_length = len(title.split(' '))
     L = title_length + headers_length + int(body_length)
-    new_tf_list = [(1 + math.log(x)) / L for x in tf_list if x != 0]
-    return new_tf_list
+    return [(1 + math.log(x)) / L if x != 0 else 0 for x in tf_list]
+
+
+def construct_query_vector_df(fileContent):
+    # file_words = nltk.word_tokenize(fileContent)
+    # for word in file_words:
+    #     for query_word in query_vector_df:
+    #         if word == query_word:
+    #             query_vector_df[query_word] = query_vector_df[query_word] + 1
+    for query_word in query_vector_df:
+        query_vector_df[query_word] = query_vector_df[query_word] + fileContent.count(query_word)
+
+
+def construct_query_vector():
+    os.chdir('C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/')
+    root = 'C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/real_data/0'
+    for dirpath, dirnames, filenames in walk(root):
+        for file in filenames:
+            try:
+                with open(dirpath + "/" + file, 'r') as f:
+                    fileContent = f.read()
+                    construct_query_vector_df(fileContent)
+            except IOError as e:
+                print(e)
+    print(query_vector_df)
+    os.chdir('C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 2 - Ranking/pa3-data/')
+    root = 'C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 2 - Ranking/pa3-data/Training/'
 
 
 queries = {}
 nr = 0
 words = nltk.word_tokenize(fileContent)
 i = 0
-headers_tf = []
+title_tf_array = []
+headers_tf_array = []
 body_tf = []
 tft = {}
 tfh = {}
 tfb = []
+query_vector_df = {}
 headers_length = 0
 while i < len(words):
     if words[i] == "query":
@@ -68,6 +101,7 @@ while i < len(words):
         desc1 = []
         tft = {}
         tfh = {}
+        query_vector_df = {}
         u = 0
         urls = {}
         i = i + 2
@@ -76,6 +110,7 @@ while i < len(words):
             desc1.append(words[i])
             tft[words[i]] = 0
             tfh[words[i]] = 0
+            query_vector_df[words[i]] = 0
             i = i + 1
         while i < len(words) and words[i] != "query":
             if words[i] == "url":
@@ -129,11 +164,15 @@ while i < len(words):
                                 i = i + 1
                 urls[u] = Classes.Url(url, title, headers, bodyHits)
                 u = u + 1
-                # tfh = construct_tf_array(headers_tf)
+                construct_query_vector()
+                title_tf_array = construct_tf_array(convert_dictionary_to_list(tft))
+                headers_tf_array = construct_tf_array(convert_dictionary_to_list(tfh))
                 tfb = construct_tf_array(body_tf)
                 headers_length = 0
-                headers_tf = []
                 body_tf = []
+                # print(query_vector_df)
+                title_tf_array = []
+                headers_tf_array = []
                 # print(tfh)
                 # print(tfh)
         queries[nr] = Classes.Query(desc, urls)
