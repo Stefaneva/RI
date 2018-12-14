@@ -1,3 +1,4 @@
+import json
 import math
 import os
 from os import walk
@@ -58,11 +59,6 @@ def construct_tf_array(tf_list):
 
 
 def construct_query_vector_df(fileContent):
-    # file_words = nltk.word_tokenize(fileContent)
-    # for word in file_words:
-    #     for query_word in query_vector_df:
-    #         if word == query_word:
-    #             query_vector_df[query_word] = query_vector_df[query_word] + 1
     for query_word in query_vector_df:
         query_vector_df[query_word] = query_vector_df[query_word] + fileContent.count(query_word)
 
@@ -78,9 +74,22 @@ def construct_query_vector():
                     construct_query_vector_df(fileContent)
             except IOError as e:
                 print(e)
-    print(query_vector_df)
     os.chdir('C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 2 - Ranking/pa3-data/')
     root = 'C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 2 - Ranking/pa3-data/Training/'
+
+
+def construct_idf_query_vector():
+    new_list = []
+    title_length = len(title.split(' '))
+    L = title_length + headers_length + int(body_length)
+    for key in query_vector_df:
+        if query_vector_df[key] != 0:
+            new_list.append(math.log(L/query_vector_df[key]))
+        else:
+            new_list.append(0)
+    print(new_list)
+    print(query_vector_df)
+    return new_list
 
 
 queries = {}
@@ -95,6 +104,7 @@ tfh = {}
 tfb = []
 query_vector_df = {}
 headers_length = 0
+df_file = 'dfile.out'
 while i < len(words):
     if words[i] == "query":
         desc = ""
@@ -112,6 +122,9 @@ while i < len(words):
             tfh[words[i]] = 0
             query_vector_df[words[i]] = 0
             i = i + 1
+        construct_query_vector()
+        with open(df_file, "a") as f:
+            f.write(json.dumps(query_vector_df))
         while i < len(words) and words[i] != "query":
             if words[i] == "url":
                 url = ""
@@ -164,17 +177,21 @@ while i < len(words):
                                 i = i + 1
                 urls[u] = Classes.Url(url, title, headers, bodyHits)
                 u = u + 1
-                construct_query_vector()
+
                 title_tf_array = construct_tf_array(convert_dictionary_to_list(tft))
                 headers_tf_array = construct_tf_array(convert_dictionary_to_list(tfh))
                 tfb = construct_tf_array(body_tf)
                 headers_length = 0
                 body_tf = []
                 # print(query_vector_df)
-                title_tf_array = []
-                headers_tf_array = []
+                # title_tf_array = []
+                # headers_tf_array = []
+                # print(tft)
                 # print(tfh)
-                # print(tfh)
+        print(title_tf_array)
+        print(headers_tf_array)
+        print(tfb)
+        construct_idf_query_vector()
         queries[nr] = Classes.Query(desc, urls)
         nr = nr + 1
 
