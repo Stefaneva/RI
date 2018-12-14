@@ -4,6 +4,7 @@ from os import walk
 import nltk
 import Classes
 
+
 # os.chdir('D:/Facultate/Master/Regasirea Informatiei/Lab 2 - Ranking/pa3-data/')
 os.chdir('C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 2 - Ranking/pa3-data/')
 # root = 'D:/Facultate/Master/Regasirea Informatiei/Lab 2 - Ranking/pa3-data/Training/'
@@ -19,24 +20,25 @@ for dirpath, dirnames, filenames in walk(root):
         print(e)
 
 
+def reinit_dictionary(dictionary):
+    for key in dictionary:
+        dictionary[key] = 0
+
+
 def construct_title_tf(title_word):
     if title_word == 'header':
         return
-    for word in desc1:
-        if word == title_word:
-            title_tf.append(1)
-            return
-    title_tf.append(0)
+    for key in tft:
+        if key == title_word:
+            tft[key] = tft[key] + 1
 
 
 def construct_header_tf(header_word):
     if header_word == 'header' or header_word == 'body_hits':
         return
-    for word in desc1:
-        if word == header_word:
-            headers_tf.append(1)
-            return
-    headers_tf.append(0)
+    for key in tfh:
+        if key == header_word:
+            tfh[key] = tfh[key] + 1
 
 
 def construct_body_tf(body_element):
@@ -54,26 +56,26 @@ queries = {}
 nr = 0
 words = nltk.word_tokenize(fileContent)
 i = 0
-title_tf = []
 headers_tf = []
 body_tf = []
-tft = []
-tfh = []
+tft = {}
+tfh = {}
 tfb = []
 headers_length = 0
 while i < len(words):
     if words[i] == "query":
         desc = ""
         desc1 = []
-        tfdb = []
-        tfdt = []
-        tfdh = []
+        tft = {}
+        tfh = {}
         u = 0
         urls = {}
         i = i + 2
         while i < len(words) and words[i] != "url":
             desc = desc + words[i] + " "
             desc1.append(words[i])
+            tft[words[i]] = 0
+            tfh[words[i]] = 0
             i = i + 1
         while i < len(words) and words[i] != "query":
             if words[i] == "url":
@@ -81,6 +83,8 @@ while i < len(words):
                 title = ""
                 headers = {}
                 bodyHits = {}
+                reinit_dictionary(tft)
+                reinit_dictionary(tfh)
                 h = 0
                 b = 0
                 i = i + 2
@@ -108,7 +112,6 @@ while i < len(words):
                             h = h + 1
                             headers_length += len(header.split(' '))
                         else:
-                            # headers_tf = []
                             if words[i - 1] == "body_hits":
                                 i = i + 1
                                 body = ""
@@ -124,17 +127,15 @@ while i < len(words):
                                     i = i + 1
                                     body_length = words[i]
                                 i = i + 1
-                                # construct_tf_array()
-                                # body_tf = []
                 urls[u] = Classes.Url(url, title, headers, bodyHits)
                 u = u + 1
-                tft = construct_tf_array(title_tf)
-                tfh = construct_tf_array(headers_tf)
+                # tfh = construct_tf_array(headers_tf)
                 tfb = construct_tf_array(body_tf)
                 headers_length = 0
-                title_tf = []
                 headers_tf = []
                 body_tf = []
+                # print(tfh)
+                # print(tfh)
         queries[nr] = Classes.Query(desc, urls)
         nr = nr + 1
 
