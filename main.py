@@ -41,6 +41,7 @@ def construct_header_tf(header_word):
         if key == header_word:
             tfh[key] = tfh[key] + 1
 
+
 def convert_dictionary_to_list(dictionary):
     new_list = []
     for key in dictionary:
@@ -63,9 +64,10 @@ def construct_query_vector_df(fileContent):
         query_vector_df[query_word] = query_vector_df[query_word] + fileContent.count(query_word)
 
 
+
 def construct_query_vector():
     os.chdir('C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/')
-    root = 'C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/real_data/0'
+    root = 'C:/Users/Eva/Desktop/Information retrieval/Lab/Lab 1 - index, query and compression/real_data'
     for dirpath, dirnames, filenames in walk(root):
         for file in filenames:
             try:
@@ -87,9 +89,33 @@ def construct_idf_query_vector():
             new_list.append(math.log(L/query_vector_df[key]))
         else:
             new_list.append(0)
-    print(new_list)
-    print(query_vector_df)
+    # print(new_list)
+    # print(query_vector_df)
     return new_list
+
+
+def apply_weights(list, weight):
+    return [item*weight for item in list]
+
+
+def sum_list(l1, l2, l3):
+    l123 = []
+    for i in range(0, len(l1)):
+        l123.append(l1[i] + l2[i] + l3[i])
+    return l123
+
+
+def construct_score(query_vector, tft_list, tfh_list, tfb_list):
+    score = 0
+    wt = 1
+    wh = 1
+    wb = 1
+    vector_weighted_sum = sum_list(apply_weights(tft_list, wt),
+                                   apply_weights(tfh_list, wh),
+                                   apply_weights(tfb_list, wb))
+    for i in range(0, len(query_vector)):
+        score += vector_weighted_sum[i] + query_vector[i]
+    print(score)
 
 
 queries = {}
@@ -123,8 +149,8 @@ while i < len(words):
             query_vector_df[words[i]] = 0
             i = i + 1
         construct_query_vector()
-        with open(df_file, "a") as f:
-            f.write(json.dumps(query_vector_df))
+        # with open(df_file, "a") as f:
+        #     f.write(json.dumps(query_vector_df))
         while i < len(words) and words[i] != "query":
             if words[i] == "url":
                 url = ""
@@ -183,15 +209,11 @@ while i < len(words):
                 tfb = construct_tf_array(body_tf)
                 headers_length = 0
                 body_tf = []
-                # print(query_vector_df)
-                # title_tf_array = []
-                # headers_tf_array = []
-                # print(tft)
-                # print(tfh)
-        print(title_tf_array)
-        print(headers_tf_array)
-        print(tfb)
-        construct_idf_query_vector()
+        # print(title_tf_array)
+        # print(headers_tf_array)
+        # print(tfb)
+        idf_vector = construct_idf_query_vector()
+        construct_score(idf_vector, title_tf_array, headers_tf_array, tfb)
         queries[nr] = Classes.Query(desc, urls)
         nr = nr + 1
 
